@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FX Converter — Live Currency Exchange</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- TICKER -->
+<div class="ticker-bar" aria-hidden="true">
+  <div class="ticker-track" id="tickerTrack"></div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo" aria-label="FX Converter home">
+    <div class="nav-logo-icon" aria-hidden="true">₿</div>
+    FX Converter
+  </a>
+  <div class="nav-status" aria-live="polite">
+    <span class="status-dot" aria-hidden="true"></span>
+    Live rates · refreshes every 12s
+  </div>
+</nav>
+
+<!-- MAIN -->
+<main class="page" role="main">
+
+  <header class="page-header">
+    <h1>Real-time <span>currency</span> converter</h1>
+    <p>Mid-market rates across 30+ currencies — no hidden margins</p>
+  </header>
+
+  <!-- CONVERTER CARD -->
+  <div class="card" role="region" aria-label="Currency converter">
+
+    <div class="currency-pairs">
+
+      <!-- FROM currency -->
+      <div>
+        <div class="field-label" id="from-label">From</div>
+        <div class="currency-select-wrap">
+          <button class="currency-btn" id="fromBtn"
+            aria-haspopup="listbox" aria-expanded="false"
+            aria-labelledby="from-label"
+            onclick="toggleDropdown('from')">
+            <div class="currency-btn-left">
+              <span class="currency-flag" id="fromFlag">🇺🇸</span>
+              <div>
+                <div class="currency-code" id="fromCode">USD</div>
+                <div class="currency-name-small" id="fromName">US Dollar</div>
+              </div>
+            </div>
+            <svg class="chevron" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 6 8 10 12 6"/></svg>
+          </button>
+          <div class="dropdown hidden" id="fromDropdown" role="listbox" aria-label="Select source currency">
+            <input type="search" class="dropdown-search" placeholder="Search currencies…" id="fromSearch" oninput="filterList('from')" aria-label="Search currencies" />
+            <div class="dropdown-list" id="fromList"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SWAP -->
+      <button class="swap-btn" onclick="swapCurrencies()" title="Swap currencies" aria-label="Swap from and to currencies">
+        <svg viewBox="0 0 20 20" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M4 7h12M13 4l3 3-3 3M16 13H4M7 10l-3 3 3 3"/>
+        </svg>
+      </button>
+
+      <!-- TO currency -->
+      <div>
+        <div class="field-label" id="to-label">To</div>
+        <div class="currency-select-wrap">
+          <button class="currency-btn" id="toBtn"
+            aria-haspopup="listbox" aria-expanded="false"
+            aria-labelledby="to-label"
+            onclick="toggleDropdown('to')">
+            <div class="currency-btn-left">
+              <span class="currency-flag" id="toFlag">🇪🇺</span>
+              <div>
+                <div class="currency-code" id="toCode">EUR</div>
+                <div class="currency-name-small" id="toName">Euro</div>
+              </div>
+            </div>
+            <svg class="chevron" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 6 8 10 12 6"/></svg>
+          </button>
+          <div class="dropdown hidden" id="toDropdown" role="listbox" aria-label="Select target currency">
+            <input type="search" class="dropdown-search" placeholder="Search currencies…" id="toSearch" oninput="filterList('to')" aria-label="Search currencies" />
+            <div class="dropdown-list" id="toList"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AMOUNT + RESULT -->
+    <div class="amount-section">
+      <div class="amount-group">
+        <div class="field-label" id="amount-label">Amount</div>
+        <input
+          class="amount-input"
+          type="number"
+          id="amountInput"
+          value="1000"
+          min="0"
+          step="any"
+          aria-labelledby="amount-label"
+          oninput="convert()"
+        />
+        <div class="rate-label" id="fromRateLabel">USD · US Dollar</div>
+      </div>
+      <div class="result-display">
+        <div class="field-label" id="result-label">Converted</div>
+        <div class="result-amount" id="resultAmount" aria-live="polite" aria-label="Converted amount">—</div>
+        <div class="rate-label" id="resultRateLabel">Fetching rate…</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-row" role="region" aria-label="Rate statistics">
+    <div class="stat-card">
+      <div class="stat-label">Mid-market rate</div>
+      <div class="stat-val" id="statMid">—</div>
+      <div class="stat-sub" id="statMidSub">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">24h high</div>
+      <div class="stat-val" id="statHigh" style="color:var(--green)">—</div>
+      <div class="stat-sub" id="statHighSub">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">24h low</div>
+      <div class="stat-val" id="statLow" style="color:var(--red)">—</div>
+      <div class="stat-sub" id="statLowSub">—</div>
+    </div>
+  </div>
+
+  <!-- CHART -->
+  <div class="chart-card" role="region" aria-label="Exchange rate chart">
+    <div class="chart-header">
+      <span class="chart-title" id="chartTitle">USD / EUR — 7-day trend</span>
+      <div class="period-tabs" role="group" aria-label="Chart time period">
+        <button class="period-btn active" onclick="setPeriod(7,this)" aria-pressed="true">1W</button>
+        <button class="period-btn" onclick="setPeriod(30,this)" aria-pressed="false">1M</button>
+        <button class="period-btn" onclick="setPeriod(90,this)" aria-pressed="false">3M</button>
+      </div>
+    </div>
+    <div class="chart-wrap">
+      <canvas id="sparkChart" role="img" aria-label="Exchange rate trend chart"></canvas>
+    </div>
+  </div>
+
+  <!-- MULTI CONVERT -->
+  <div class="multi-card" role="region" aria-label="Quick conversions to major currencies">
+    <div class="multi-header">Quick conversions &mdash; <strong id="multiBaseLabel">1,000 USD</strong></div>
+    <div id="multiRows"></div>
+  </div>
+
+</main>
+
+<!-- FOOTER -->
+<footer>
+  <p>Rates are indicative mid-market rates for informational purposes only.<br/>
+  For production use, connect a live data source such as <a href="https://www.frankfurter.app/" target="_blank" rel="noopener">Frankfurter</a> or <a href="https://open.er-api.com/" target="_blank" rel="noopener">Open Exchange Rates</a>.</p>
+</footer>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="script.js"></script>
+
+</body>
+</html>
